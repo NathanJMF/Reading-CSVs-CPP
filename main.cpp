@@ -11,7 +11,7 @@
 
 using namespace std;
 bool check_fp(const string& fp);
-bool check_op(const string& op);
+bool selection(const string& choice, const string& path);
 
 class csvItem{
     public:
@@ -125,26 +125,14 @@ int main(int argc, char** argv) {
     string path = argv[1];
     string operation = argv[2];
     // Check to see if file path and operator are valid.
-    if (!check_fp(path) || !check_op(operation)){
-        cerr << "Please pass valid arguments" << endl;
+    if (!check_fp(path)){
+        cerr << "Please pass a valid file path" << endl;
         return 1;
     }
-
-    csvItem obj1(path);
-
-    if (operation == "print"){
-        obj1.print();
+    if (!selection(operation, path)){
+        cerr << "Please pass a valid operation" << endl;
+        return 1;
     }
-    else if (operation == "sum"){
-        obj1.printSum();
-    }
-    else if (operation == "mean"){
-        obj1.printMean();
-    }
-    else{
-        obj1.printStd();
-    }
-
     return 0;
 }
 
@@ -158,10 +146,23 @@ bool check_fp(const string& fp){
     return true;
 }
 
-bool check_op(const string& op){
-    // Check to see if operation is valid.
-    if (op == "print" || op == "sum" || op == "mean" || op == "std"){
-        return true;
+bool selection(const string& choice, const string& path){
+    csvItem obj1(path);
+    if (choice == "print"){
+        obj1.print();
     }
-    return false;
+    else if (choice == "sum"){
+        obj1.printSum();
+    }
+    else if (choice == "mean"){
+        obj1.printMean();
+    }
+    else if (choice == "std"){
+        obj1.printStd();
+    }
+    else{
+        return false;
+    }
+    return true;
 }
+
