@@ -46,6 +46,7 @@ class csvItem{
             }
             currentFile.close();
         }
+
         vector<int> getColumn1(){
             return c1;
         }
@@ -54,6 +55,40 @@ class csvItem{
         }
         vector<int> getColumn3(){
             return c3;
+        }
+};
+
+class printCsvItem : public csvItem{
+    public:
+        explicit printCsvItem(string aPath) : csvItem(std::move(aPath)) {
+        }
+        void objectOperation(){
+            vector<int> column1 = getColumn1();
+            vector<int> column2 = getColumn2();
+            vector<int> column3 = getColumn3();
+            cout << "Col1 " << "Col2 " << "Col3" << endl;
+            for (int i = 0; i < column1.size(); ++i) {
+                cout << column1[i]<< "    " << column2[i] << "    " << column3[i] << endl;
+            }
+        }
+};
+
+class sumCsvItem : public csvItem{
+    public:
+        explicit sumCsvItem(string aPath) : csvItem(std::move(aPath)) {
+        }
+        void objectOperation(){
+            vector<int> column1 = getColumn1();
+            vector<int> column2 = getColumn2();
+            vector<int> column3 = getColumn3();
+            int count1 = 0, count2 = 0, count3 = 0;
+            for (int i = 0; i < column1.size(); ++i) {
+                count1 += column1[i];
+                count2 += column2[i];
+                count3 += column3[i];
+            }
+            cout << "col1 " << "col2 " << "col3" << endl;
+            cout << count1 << "  " << count2 << "  " << count3 << endl;
         }
 };
 
@@ -68,21 +103,20 @@ int main(int argc, char** argv) {
         cerr << "Please pass a valid number of arguments" << endl;
         return 1;
     }
-    // Check to see if file path and operator are valid.
+
     string path = argv[1];
     string operation = argv[2];
+    // Check to see if file path and operator are valid.
     if (!check_fp(path) || !check_op(operation)){
         cerr << "Please pass valid arguments" << endl;
         return 1;
     }
+    printCsvItem obj1(path);
+    obj1.objectOperation();
 
-    csvItem obj1(path);
-    vector<int> curr1 = obj1.getColumn1();
-    vector<int> curr2 = obj1.getColumn2();
-    vector<int> curr3 = obj1.getColumn3();
-    for (int i = 0; i < curr1.size(); ++i) {
-        cout << curr1[i] << curr2[i] << curr3[i]  << endl;
-    }
+    sumCsvItem obj2(path);
+    obj2.objectOperation();
+
 
     return 0;
 }
