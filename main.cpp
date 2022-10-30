@@ -7,30 +7,24 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 bool check_fp(const string& fp);
 bool check_op(const string& op);
 
 class csvItem{
-    private:
-        vector<int> c1, c2, c3;
-        string path;
     public:
-        explicit csvItem(string aPath){
-            setPath(std::move(aPath));
-            setColumns();
+        vector<int> c1, c2, c3;
+
+        explicit csvItem(const string& aPath){
+            setColumns(aPath);
         }
-        void setPath(string aPath){
-            path = std::move(aPath);
-        }
-        string getPath(){
-            return path;
-        }
-        void setColumns(){
+
+        void setColumns(const string& aPath){
             // Open the CSV.
             ifstream currentFile;
-            currentFile.open(getPath());
+            currentFile.open(aPath);
             string currentLine;
             getline(currentFile, currentLine);
             // Parses given CSV and stores data.
@@ -47,49 +41,73 @@ class csvItem{
             currentFile.close();
         }
 
-        vector<int> getColumn1(){
-            return c1;
-        }
-        vector<int> getColumn2(){
-            return c2;
-        }
-        vector<int> getColumn3(){
-            return c3;
-        }
-};
-
-class printCsvItem : public csvItem{
-    public:
-        explicit printCsvItem(string aPath) : csvItem(std::move(aPath)) {
-        }
-        void objectOperation(){
-            vector<int> column1 = getColumn1();
-            vector<int> column2 = getColumn2();
-            vector<int> column3 = getColumn3();
+        static void printVector(vector<int> col1, vector<int> col2, vector<int> col3){
             cout << "Col1 " << "Col2 " << "Col3" << endl;
-            for (int i = 0; i < column1.size(); ++i) {
-                cout << column1[i]<< "    " << column2[i] << "    " << column3[i] << endl;
+            for (int i = 0; i < col1.size(); ++i) {
+                cout << col1[i]<< "    " << col2[i] << "    " << col3[i] << endl;
             }
         }
-};
 
-class sumCsvItem : public csvItem{
-    public:
-        explicit sumCsvItem(string aPath) : csvItem(std::move(aPath)) {
+        static void printVal(float val1, float val2, float val3){
+            cout << "Col1 " << "Col2 " << "Col3" << endl;
+            cout << val1 << "    " << val2 << "    " << val3 << endl;
         }
-        void objectOperation(){
-            vector<int> column1 = getColumn1();
-            vector<int> column2 = getColumn2();
-            vector<int> column3 = getColumn3();
-            int count1 = 0, count2 = 0, count3 = 0;
-            for (int i = 0; i < column1.size(); ++i) {
-                count1 += column1[i];
-                count2 += column2[i];
-                count3 += column3[i];
+
+        vector<int> calcSum(){
+            vector<int> sums(3);
+            for (int i = 0; i < c1.size(); ++i) {
+                sums[0] += c1[i];
+                sums[1] += c2[i];
+                sums[2] += c3[i];
             }
-            cout << "col1 " << "col2 " << "col3" << endl;
-            cout << count1 << "  " << count2 << "  " << count3 << endl;
+            return sums;
         }
+
+        vector<float> calcMean(){
+            vector<int> sums = calcSum();
+            vector<float> means (3);
+            float length = c1.size();
+            means[0] = float(sums[0])/length;
+            means[1] = float(sums[1])/length;
+            means[2] = float(sums[2])/length;
+            return means;
+        }
+
+        vector<float> calcStd(){
+            vector<float> means = calcMean();
+            vector<float> stds(3);
+            int length = c1.size();
+            for (int i = 0; i < length; ++i) {
+                stds[0] += pow(c1[i] - means[0], 2);
+                stds[1] += pow(c2[i] - means[1], 2);
+                stds[2] += pow(c3[i] - means[2], 2);
+            }
+            stds[0] = sqrt(stds[0]/length);
+            stds[1] = sqrt(stds[1]/length);
+            stds[2] = sqrt(stds[2]/length);
+            return stds;
+        }
+
+        void print() const{
+            printVector(c1, c2, c3);
+        }
+
+        void printSum(){
+            vector<int> sums = calcSum();
+            printVal(float(sums[0]), float(sums[1]), float(sums[2]));
+        }
+
+        void printMean(){
+            vector<float> item = calcMean();
+            printVal(item[0], item[1], item[2]);
+        }
+
+        void printStd(){
+            vector<float> stds = calcStd();
+            printVal(stds[0], stds[1], stds[2]);
+        }
+
+
 };
 
 /**
@@ -111,12 +129,21 @@ int main(int argc, char** argv) {
         cerr << "Please pass valid arguments" << endl;
         return 1;
     }
-    printCsvItem obj1(path);
-    obj1.objectOperation();
 
-    sumCsvItem obj2(path);
-    obj2.objectOperation();
+    csvItem obj1(path);
 
+    if (operation == "print"){
+        obj1.print();
+    }
+    else if (operation == "sum"){
+        obj1.printSum();
+    }
+    else if (operation == "mean"){
+        obj1.printMean();
+    }
+    else{
+        obj1.printStd();
+    }
 
     return 0;
 }
