@@ -14,99 +14,119 @@ bool check_fp(const string& fp);
 bool selection(const string& choice, const string& path);
 
 class csvItem{
-    public:
-        vector<int> c1, c2, c3;
+public:
+    int numCols;
+    vector<vector<int> > columns;
+    vector<string> names;
+    explicit csvItem(const string& aPath){
+        setColumns(aPath);
+    }
 
-        explicit csvItem(const string& aPath){
-            setColumns(aPath);
+    void setColumns(const string& aPath){
+        // Open the CSV.
+        ifstream currentFile;
+        currentFile.open(aPath);
+        string currentLine;
+
+        // Get the names and number of columns
+        getline(currentFile, currentLine);
+        int count = 0;
+        stringstream colNames(currentLine);
+        while (colNames.good()){
+            string sub;
+            getline(colNames, sub, ',');
+            names.push_back(sub);
+            count++;
         }
-
-        void setColumns(const string& aPath){
-            // Open the CSV.
-            ifstream currentFile;
-            currentFile.open(aPath);
-            string currentLine;
-            getline(currentFile, currentLine);
-            // Parses given CSV and stores data.
-            while (getline(currentFile, currentLine)){
-                stringstream inputString(currentLine);
-                string column1, column2, column3;
-                getline(inputString, column1, ',');
-                c1.push_back(stoi(column1));
-                getline(inputString, column2, ',');
-                c2.push_back(stoi(column2));
-                getline(inputString, column3);
-                c3.push_back(stoi(column3));
+        numCols = count;
+        vector< vector<int> >values(count);
+        // Parses given CSV and stores data.
+        while (getline(currentFile, currentLine)){
+            int i = 0;
+            stringstream inputString(currentLine);
+            while (inputString.good()){
+                string currentVal;
+                getline(inputString, currentVal, ',');
+                values[i].push_back(stoi(currentVal));
+                i++;
             }
-            currentFile.close();
-        }
 
-        static void printVector(vector<int> col1, vector<int> col2, vector<int> col3){
-            cout << "Col1 " << "Col2 " << "Col3" << endl;
-            for (int i = 0; i < col1.size(); ++i) {
-                cout << col1[i]<< "    " << col2[i] << "    " << col3[i] << endl;
+        }
+        columns = values;
+        currentFile.close();
+    }
+
+    void printFloat(vector<float> values){
+        for (int i = 0; i < numCols; ++i) {
+            cout << names[i] << endl;
+            cout << values[i] << endl;
+        }
+    }
+
+    void printInt(vector<int> values){
+        for (int i = 0; i < numCols; ++i) {
+            cout << names[i] << endl;
+            cout << values[i] << endl;
+        }
+    }
+
+    void printAll(){
+        for (size_t j = 0; j < columns.size(); j++) {
+            cout << names[j] << endl;
+            for (size_t i = 0; i < columns[0].size(); i++) {
+                cout << columns[j][i] << endl;
             }
         }
+    }
 
-        static void printVal(float val1, float val2, float val3){
-            cout << "Col1 " << "Col2 " << "Col3" << endl;
-            cout << val1 << "    " << val2 << "    " << val3 << endl;
-        }
-
-        vector<int> calcSum(){
-            vector<int> sums(3);
-            for (int i = 0; i < c1.size(); ++i) {
-                sums[0] += c1[i];
-                sums[1] += c2[i];
-                sums[2] += c3[i];
+    vector<int> calcSums(){
+        vector<int> sums;
+        for (int i = 0; i < numCols; ++i) {
+            int count = 0;
+            for (int j = 0; j < columns[i].size(); ++j) {
+                count += columns[i][j];
             }
-            return sums;
+            sums.push_back(count);
         }
+        return sums;
+    }
 
-        vector<float> calcMean(){
-            vector<int> sums = calcSum();
-            vector<float> means (3);
-            float length = c1.size();
-            means[0] = float(sums[0])/length;
-            means[1] = float(sums[1])/length;
-            means[2] = float(sums[2])/length;
-            return means;
+    vector<float> calcMeans(){
+        vector<float> means;
+        vector<int> sums = calcSums();
+        for (int i = 0; i < numCols; ++i) {
+            means.push_back(float(sums[i]) / float(columns[i].size()));
         }
+        return means;
+    }
 
-        vector<float> calcStd(){
-            vector<float> means = calcMean();
-            vector<float> stds(3);
-            int length = c1.size();
-            for (int i = 0; i < length; ++i) {
-                stds[0] += pow(c1[i] - means[0], 2);
-                stds[1] += pow(c2[i] - means[1], 2);
-                stds[2] += pow(c3[i] - means[2], 2);
+    vector<float> calcStds(){
+        vector<float> stds(numCols);
+        vector<float> means = calcMeans();
+        for (int i = 0; i < numCols; ++i) {
+            int length = columns[i].size();
+            for (int j = 0; j < length; ++j) {
+                stds[i] += pow(columns[i][j] - means[i], 2);
             }
-            stds[0] = sqrt(stds[0]/length);
-            stds[1] = sqrt(stds[1]/length);
-            stds[2] = sqrt(stds[2]/length);
-            return stds;
+            stds[i] = sqrt(stds[i]/length);
         }
+        return stds;
+    }
 
-        void print() const{
-            printVector(c1, c2, c3);
-        }
+    void printSums(){
+        vector<int> sumsValues = calcSums();
+        printInt(sumsValues);
+    }
 
-        void printSum(){
-            vector<int> sums = calcSum();
-            printVal(float(sums[0]), float(sums[1]), float(sums[2]));
-        }
+    void printMeans(){
+        vector<float> meansValues = calcMeans();
+        printFloat(meansValues);
+    }
 
-        void printMean(){
-            vector<float> item = calcMean();
-            printVal(item[0], item[1], item[2]);
-        }
-
-        void printStd(){
-            vector<float> stds = calcStd();
-            printVal(stds[0], stds[1], stds[2]);
-        }
-
+    void printStds(){
+        vector<float> stdsValues = calcStds();
+        printFloat(stdsValues);
+    }
 
 };
 
@@ -149,16 +169,16 @@ bool check_fp(const string& fp){
 bool selection(const string& choice, const string& path){
     csvItem obj1(path);
     if (choice == "print"){
-        obj1.print();
+        obj1.printAll();
     }
     else if (choice == "sum"){
-        obj1.printSum();
+        obj1.printSums();
     }
     else if (choice == "mean"){
-        obj1.printMean();
+        obj1.printMeans();
     }
     else if (choice == "std"){
-        obj1.printStd();
+        obj1.printStds();
     }
     else{
         return false;
